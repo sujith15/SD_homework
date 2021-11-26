@@ -1,19 +1,31 @@
 import os
 from tree_sitter import Language, Parser
 from git import Repo
+import sys
 
-Repo.clone_from("https://github.com/sujith15/TestFiles.git", "clone_files")
+giturl = sys.argv[1]
+extension = sys.argv[2]
+language = sys.argv[3]
+output_1 = sys.argv[4]
+output_2 = sys.argv[5]
+
+Repo.clone_from(giturl, "clone_files")
 
 Language.build_library(
     # Store the library in the `build` directory
     'build/my-languages.so',
 
     # Include one or more languages
+
     [
-        'vendor/tree-sitter-python'
+        'vendor/tree-sitter-python',
+        'vendor/tree-sitter-go',
+        'vendor/tree-sitter-javascript',
+        'vendor/tree-sitter-ruby'
+
     ]
 )
-PY_LANGUAGE = Language('build/my-languages.so', 'python')
+
 
 output1 = []
 output2 = []
@@ -237,11 +249,25 @@ def main_tests(input_string):
     return output_list
 
 
+if extension == ".py":
+    file_extension = ".py"
+    file_language = Language('build/my-languages.so', 'python')
+elif extension == ".go":
+    file_extension = ".go"
+    file_language = Language('build/my-languages.so', 'go')
+elif extension == ".js":
+    file_extension = ".js"
+    file_language = Language('build/my-languages.so', 'javascript')
+elif extension == ".rb":
+    file_extension = ".rb"
+    file_language = Language('build/my-languages.so', 'ruby')
+
 for root, dirs, files in os.walk(r'clone_files'):
     # select file name
     for file in files:
         # check the extension of files
-        if file.endswith('.py'):
+
+        if file.endswith(file_extension):
             # print(os.path.join(root, file))
             file1 = open(os.path.join(root, file), 'r', encoding='UTF8')
 
@@ -250,7 +276,7 @@ for root, dirs, files in os.walk(r'clone_files'):
             code = data
             code_list = code.split('\n')
             parser = Parser()
-            parser.set_language(PY_LANGUAGE)
+            parser.set_language(file_language)
             tree = parser.parse(bytes(code, "utf8"))
 
             l = [0]
@@ -281,8 +307,7 @@ for root, dirs, files in os.walk(r'clone_files'):
                 inner_list.append(f'End point: {list[i].end_point}')
                 output1.append(inner_list)
                 inner_list = []
-
-            textfile = open("output1.txt", "w")
+            textfile = open(output_1, "w")
             for element in output1:
                 # print("element = ",element)
                 textfile.write(str(element) + "\n")
@@ -305,8 +330,7 @@ for root, dirs, files in os.walk(r'clone_files'):
                     inner_list_2.append(result)
                     output2.append(inner_list_2)
                     inner_list_2 = []
-
-            textfile = open("output2.txt", "w")
+            textfile = open(output_2, "w")
             for element in output2:
                 # print("element = ",element)
                 textfile.write(str(element) + "\n")
